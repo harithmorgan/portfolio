@@ -1,0 +1,357 @@
+import sys
+from Tkinter import *
+import time
+import RPi.GPIO as GPIO
+import pygame
+import picamera
+import os
+import tkMessageBox
+import datetime
+
+#GPIO SETUP
+light=24
+ControlPin=[4,17,27,22]
+button1=6
+button2=13
+button3=19
+button4=26
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(button1,GPIO.IN)
+GPIO.setup(button2,GPIO.IN)
+GPIO.setup(button3,GPIO.IN)
+GPIO.setup(button4,GPIO.IN)
+GPIO.setup(light, GPIO.OUT)
+GPIO.output(light, GPIO.HIGH)
+for pin in ControlPin:
+  GPIO.setup(pin,GPIO.OUT)
+  GPIO.output(pin,0)
+
+
+
+#Music Setup:
+beep1='/home/pi/music/beep7.mp3'
+beep2='/home/pi/music/beep8.mp3'
+shutter='/home/pi/music/shutter.mp3'
+sounds=[beep1,beep1,beep2,shutter]
+pygame.mixer.init()
+
+#camera Setup
+camera = picamera.PiCamera()
+camera.vflip=False
+camera.hflip=False
+
+#variables 4 loops
+photo_number=1
+photo4display=[]
+photo_book=[]
+seq=[[1,0,0,0],[1,1,0,0],[0,1,0,0],[0,1,1,0],[0,0,1,0],[0,0,1,1],[0,0,0,1],[1,0,0,1]]
+flash=1
+difference=0
+#fUNCTIONS
+
+def lower_camera(number):
+    for i in range((90-number)):#down into storing position
+        for halfstep in range(8):
+            for pin in range(4):
+                GPIO.output(ControlPin[pin],seq[halfstep][pin])
+            time.sleep(0.001)
+    for pin in ControlPin:
+        GPIO.output(pin,0)
+def raise_camera():
+    for i in range(90):#up into camera position
+        for halfstep in range(7,-1,-1):
+            for pin in range(4):
+                GPIO.output(ControlPin[pin],seq[halfstep][pin])
+            time.sleep(0.001)
+    for pin in ControlPin:
+        GPIO.output(pin,0)
+        
+def countdown(event):
+    #image placement setup
+    pic=Label(mGui, image=None)
+    pic.pack(pady=50)
+    #countdown from 3 with sound+shutter
+    for i in range(4):
+     pic.configure(image=photo[i])
+     mGui.update()
+     pygame.mixer.music.load(sounds[i])
+     pygame.mixer.music.play()
+     time.sleep(1)
+    pic.destroy()
+    mGui.update()
+    takePhoto()
+
+def takePhoto():
+    global flash
+    global photo_number
+    photo_name=user_name+str(photo_number)+'.jpg'
+    if flash==1:
+            GPIO.output(light, GPIO.LOW)
+            print flash
+    camera.start_preview()
+    time.sleep(1)
+    camera.capture(photo_name)
+    camera.stop_preview()
+    if flash==1:
+            GPIO.output(light, GPIO.HIGH)
+    os.system('sudo mv %r /home/pi/oeop_code/final_project/%r'%(photo_name,folder_name)) 
+    retry=tkMessageBox.askyesno("Good?","Are you satisfied with image?     Press no to retake.")
+    if retry==False:
+        adjust=tkMessageBox.askyesno("Adjust","Would you like to keep status of camera?")
+        if adjust==False:
+                adjust_page()
+        elif adjust==True:
+                countdown(1)
+    else:
+            photo_number+=1
+            MainPage('skip')
+                
+def adjust_cam(direction):
+    global difference
+    if direction=='down':
+        for halfstep in range(8):
+            for pin in range(4):
+                GPIO.output(ControlPin[pin],seq[halfstep][pin])
+            time.sleep(0.001)
+        difference+=1
+    if direction=='up':
+        for halfstep in range(7,-1,-1):
+            for pin in range(4):
+                GPIO.output(ControlPin[pin],seq[halfstep][pin])
+            time.sleep(0.001)
+        difference-=1
+    adjust_page()
+    
+def adjust_page():
+    option1 = Label(text='RAISE CAMERA',height=4,fg='yellow',bg='black',font='Helvetica 14 bold',relief=RAISED)
+    option1.pack(pady=5)
+
+    option2 = Label(text='LOWER CAMERA',height=4,fg='yellow',bg='black',font='Helvetica 14 bold',relief=RAISED)
+    option2.pack(pady=5)
+
+    option3 = Label(text='TURN FLASH ON',height=4,fg='yellow',bg='black',font='Helvetica 14 bold',relief=RAISED)
+    option3.pack(pady=5)
+
+    option4 = Label(text='TURN FLASH OFF',height=4,fg='yellow',bg='black',font='Helvetica 14 bold',relief=RAISED)
+    option4.pack(pady=5)
+    mGui.update()
+    while GPIO.input(button1)==0 and GPIO.input(button2)==0 and GPIO.input(button3)==0 and GPIO.input(button4)==0:
+        pass 
+    option1.destroy()
+    option2.destroy()
+    option3.destroy()
+    option4.destroy()
+    global flash
+    if GPIO.input(button1)==1:
+        adjust_cam('up')
+    elif GPIO.input(button2)==1:
+        adjust_cam('down')
+    elif GPIO.input(button3)==1:
+        flash=1 
+    elif GPIO.input(button4)==1:
+        flash=0
+    countdown(1)    
+def exit_fullscreen(event):
+    mGui.attributes('-fullscreen', False)
+
+def sendEmail():
+    count=1
+    date=datetime.datetime.today().date()
+    for photos in photo_book:
+        subject='Personal Photobooth('+str(date)+'):Image#'+ str(count)
+        run='sudo mpack -s "'+subject+'" /home/pi/oeop_code/final_project/'+folder_name+'/'+photos+' '+user_email
+        os.system(run)
+        print run
+    inform= Label(text='THANK YOU FOR USING THE PERSONAL PHOTOBOOTH.',fg='spring green', bg='black',font='Helvetica 20 bold')
+    inform.place(x=10,y=200)
+    option4 = Label(text='END-->',height=4,fg='white',bg='black',font='Helvetica 14 bold')
+    option4.place(x=680,y=350)
+    mGui.update()
+    while GPIO.input(button4)==0:
+        pass
+    option4.destroy()
+    inform.destroy()
+def makeFolder(event):
+    global folder_name
+    folder_name=user_name
+    if not os.path.exists(folder_name):
+        os.system('mkdir %r'%(folder_name))
+    elif os.path.exists(folder_name):
+        os.system('sudo rm -r %r'%(folder_name))
+        makeFolder(1)
+    MainPage('skip')
+    
+#PAGES    
+def intropage():
+    intro= Label(text='What is your ...',height=2,fg='medium blue',bg='black',font='Helvetica 40 bold italic')
+    intro.pack()
+    name= Label(text='Name:', height=2, fg='white',bg='black',font='Helvetica 20')
+    global name_entry
+    name_entry= Entry(mGui)
+    mail=Label(text='Email:', height=2, fg='white',bg='black',font='Helvetica 20')
+    global mail_entry
+    mail_entry=Entry(mGui)
+    name.pack()
+    name_entry.pack(padx=2)
+    mail.pack()
+    mail_entry.pack(padx=2)
+
+    global params1
+    params1=[intro,name,name_entry,mail,mail_entry]
+    mGui.configure(background='black')
+    mGui.bind('<Return>', MainPage )
+    mGui.bind('<Escape>', exit_fullscreen)
+
+def MainPage(event):
+    if event!='skip':
+        global user_name
+        user_name=name_entry.get()
+        user_name=user_name.lower()
+        global user_email
+        user_email=mail_entry.get()
+        for i in params1:
+            i.destroy()
+        raise_camera()
+        makeFolder(1)
+
+    print 'difference:'+str(difference)   
+    screensaver=Label(mGui, image=screen_svr)
+    screensaver.pack(side=LEFT,padx=30)
+    
+    option1 = Label(text='Take Photo-->',height=4,fg='white',bg='black',font='Helvetica 14 bold')
+    option1.pack(anchor=E)
+
+    option2 = Label(text='Camera Preview-->',height=4,fg='white',bg='black',font='Helvetica 14 bold')
+    option2.pack(anchor=E)
+
+    option3 = Label(text='Email Photos-->',height=4,fg='white',bg='black',font='Helvetica 14 bold')
+    option3.pack(anchor=E)
+
+    option4 = Label(text='Quit/Start over-->',height=4,fg='white',bg='black',font='Helvetica 14 bold')
+    option4.pack(anchor=E)
+    
+    mGui.bind('<Escape>', exit_fullscreen)
+    mGui.update()
+    while GPIO.input(button1)==0 and GPIO.input(button2)==0 and GPIO.input(button3)==0 and GPIO.input(button4)==0:
+        pass
+    global params2
+    params2=[screensaver,option1,option2,option3,option4]
+    screensaver.destroy()
+    option1.destroy()
+    option2.destroy()
+    option3.destroy()
+    option4.destroy()
+    if GPIO.input(button1)==1:
+        countdown(event)
+    elif GPIO.input(button2)==1:
+        camera.start_preview()
+        time.sleep(3)
+        camera.stop_preview()
+        MainPage('skip')
+    elif GPIO.input(button3)==1:
+        global photo_book
+        temp=os.listdir('/home/pi/oeop_code/final_project/'+folder_name)
+        index=1
+        while len(photo_book)< len(temp):
+         for i in temp:
+          if i[len(user_name)]==str(index):
+            photo_book.append(i)
+            index+=1
+        if len(photo_book)>0:
+            iteration=1
+            for pic in photo_book:
+                iter_name=user_name+str(iteration)+'.ppm'
+                os.system('sudo convert /home/pi/oeop_code/final_project/'+folder_name+'/'+pic+' /home/pi/oeop_code/final_project/'+folder_name+'/'+iter_name)
+                os.system('sudo convert /home/pi/oeop_code/final_project/'+folder_name+'/'+iter_name+' -resize 400X200 /home/pi/oeop_code/final_project/'+folder_name+'/'+iter_name)
+                photo4display.append(iter_name)
+        page2('setup')                    
+    elif GPIO.input(button4)==1:
+        for i in params1:
+            i.destroy()
+        for i in params2:
+            i.destroy()
+        global photo_number
+        photo_number=1
+        intropage()
+def page2(event):
+    if event == 'setup':
+        option1_2 = Label(text=None,height=4,fg='white',bg='black',font='Helvetica 14 bold')
+        option1_2.pack(anchor=E)
+
+        option2_2 = Label(text='Email Photos-->',height=4,fg='white',bg='black',font='Helvetica 14 bold')
+        option2_2.pack(anchor=E)
+
+        option3_2 = Label(text='Go Back-->',height=4,fg='white',bg='black',font='Helvetica 14 bold')
+        option3_2.pack(anchor=E)
+
+        option4_2 = Label(text='Quit/Start over-->',height=4,fg='white',bg='black',font='Helvetica 14 bold')
+        option4_2.pack(anchor=E)
+    global photo_number
+    position=0
+    slideshow=Label(mGui, image=None)
+    slideshow.place(x=200,y=50)
+    mGui.update()
+    loop=0
+    while GPIO.input(button2)==0 and GPIO.input(button3)==0 and GPIO.input(button4)==0:
+     while current_time<=start_time+2 and GPIO.input(button2)==0 and GPIO.input(button3)==0 and GPIO.input(button4)==0 :
+        show=PhotoImage(file='/home/pi/oeop_code/final_project/'+folder_name+'/'+photo4display[position])
+        slideshow.configure(image=show)
+        if loop==0:
+                mGui.update()
+                loop=1
+        current_time=time.time()
+     position+=1
+     start_time=time.time()
+     current_time=0
+     if position>(len(photo4display)-1):
+             position=0
+     mGui.update()
+     loop=0
+    slideshow.destroy()
+    que.destroy()
+    option1_2.destroy()
+    option2_2.destroy()
+    option3_2.destroy()
+    option4_2.destroy()
+    if GPIO.input(button2)==1:
+        sendEmail()
+        global difference
+        lower_camera(difference)
+        exit_fullscreen(1)
+        for i in params2:
+                i.destroy()
+        intropage()
+    elif GPIO.input(button3)==1:
+        time.sleep(.2)
+        MainPage('skip')
+    elif GPIO.input(button4)==1:
+        for i in params2:
+            i.destroy()
+        photo_number=1
+        intropage()
+
+try:
+    while True:
+        mGui=Tk()
+        #mGui.geometry('800x410')
+        mGui.attributes('-fullscreen', True)
+        mGui.title('CAMERA APP')
+
+        one=PhotoImage(file='number1.ppm')
+        two=PhotoImage(file='number2.ppm')
+        three=PhotoImage(file='number3.ppm')
+        camera_pic=PhotoImage(file='camera.ppm')
+        screen_svr=PhotoImage(file='screensaver.ppm')
+        photo=[three,two,one,camera_pic]
+
+
+        mGui.after(100, intropage)
+        mGui.mainloop()
+except KeyboardInterrupt:
+    print 'KeyboardInterrupt'
+                iteration+=1
+    que= Label(text='You took '+str((photo_number-1))+' photo(s).',fg='spring green', bg='black',font='Helvetica 20 bold')
+    que.place(x=250,y=300)
+    start_time=time.time()
+    current_time=0
