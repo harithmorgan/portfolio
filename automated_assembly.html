@@ -1,0 +1,209 @@
+
+<!DOCTYPE HTML>
+<!--
+	Strata by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+
+<head>
+    <title>Harith's Projects - Automated Assembly</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+  </head>
+
+
+<body id="main" class="is-preload">
+
+
+<header id="header">
+        <div class="inner">
+         <!-- This is where the header text comes from, it's inserted with CSS. see main.css line~2668 -->
+          <a href="index.html#" class="image avatar"><img src="img_vid2/profile_pic.jpg"></a>
+          <br><span class = "headertext_hi">  </span>
+          <br><span class = "headertext_hometown">  </span>
+          <br><span class = "headertext_pitch">  </span>
+          <br><span class = "headertext_closing">  </span>
+          <!-- header text above -->
+        </div>
+      </header>
+
+<div> 
+<h1>Automated Assembly</h1>
+
+<p style="margin-top:1cm;"></p>
+<p >This is an undergraduate research project done in affiliation with the MIT Center for Bits and Atoms(CBA). The goal of this research is to leverage existing technology, 6 degree of freedom robotic arms, to automate the assembly of ultra-performance materials/mechanisms. This page is going to step through the process of me learning to use a specific model of 6 D.O.F arms, UR10 robot arms, to automate assembly. </p>
+
+
+<img src="img_vid/UR10_thumbnail.jpg" style="display: block; margin-right: auto; margin-left: auto; height: 60%; width: 50%">
+
+
+<p class = "subtitle"> Getting Started:</p>
+<p> My knowledge on how to operate a 6-axis robot arm is non-existent at this point. Fortunately, I found an <a href="https://www.universal-robots.com/academy/"> online tutorial</a> that gives the basic rundown of how the robot arms function. The tutorial provides useful information about the different motion types the robot can execute as well as details on connecting peripheral devices (this will be useful later down the road). The utility of the tutorial, however, is limited in that it strictly uses the teaching pendant as the means for programing the robot.</p>
+
+
+<p class = "subtitle">Movement:</p>
+<p>The motions for the arm are characterized as such:</p>
+<p>
+<ul>
+  <li>Type J: This motion is the most efficient because the robot adjust all joint angles simultaneously, however, it does so with little/no regard for where the end effector is during transition. This means that you should only execute this type of motion when moving in unconfined spaces.</li>
+  <li>Type L: This motion adjusts joints angles in a way that allows the end effector to travel in a striaght lines. This is ideal for descending operations, or basically anything involved with picking/insertion of parts.</li>
+  <li>Type C: This executes a cicular trajectory for the end effector.</li>
+  <li>Type P: This motion is more concerned with the speed of the end effector. It is similar to a Type L motion, however, the end effector travels at a constant speed. This is useful for tooling/operations that need consistent application(ex. welding, gluing, etc.).</li>
+</ul></p>
+
+
+<video style = "margin-bottom: 30px; width: 35%" controls muted loop > <source src="img_vid/teach_program.mp4"> </video>
+
+<p> Using what I learned from the online tutorial, I was able to program a path via the teaching pendant. This small success while encouraging is only marginally useful because the motion path is described by a series of remembered position. As I execute the program the arm is traversing through waypoints that I physically moved the end effector to. The next step will be to move on to script programming. There are a surprising amount of resources online for this including <a href="http://www.zacobria.com/universal-robots-knowledge-base-tech-support-forum-hints-tips/universal-robots-script-programming/"> Zacobria<a> and an <a href="http://www.sysaxes.com/manuels/scriptmanual_en_3.1.pdf">online manual</a> found by <a href = "http://www.mit.edu/~calisch/">Sam Calisch</a>, one of the grad students in the lab. I am also using <a href="https://tools.pages.cba.mit.edu/Universal_Robotics_UR10_Robot_Arm/">Sam's previous work</a> as a reference.</p>
+
+ 
+<div class="gallery" style = "margin: 5%; float: left; width:25%">
+  <a href="img_vid/gripper_on.jpg" class="image fit thumb"><img src="img_vid/gripper_on.jpg"></a>
+    <!-- <img src="img_vid/gripper_on.jpg"> -->
+  <div class="desc">Mounted Gripper</div>
+</div>
+<div class="gallery" style = "margin: 5%; float: left; width: 20%">
+  <a href="img_vid/gripper_parts.jpg" class="image fit thumb"><img src="img_vid/gripper_parts.jpg"></a>
+    <!-- <img src="img_vid/gripper_parts.jpg" > -->
+  <div class="desc">Disassembled Gripper(2)</div>
+</div>
+
+  <div class="gallery" style = "margin: 5%; float: left; width: 25%">
+    <a href="img_vid/end_effector_parts.jpg" class="image fit thumb"><img src="img_vid/end_effector_parts.jpg"></a>
+    <!-- <img src="img_vid/end_effector_parts.jpg" > -->
+  <div class="desc">Disassmebled Gripper</div>
+</div>
+
+
+<div class = "full_line_div_test" style="height: 120px; margin-bottom: 40%"></div>
+
+<p class = "subtitle">Script Programming</p>
+<p>Before working on routines for the arm to run through I wanted to figure out a little more about manipulating end effectors. Conveniently, we have a <a href="https://robotiq.com/products/2-finger-adaptive-robot-gripper">Robotiq Two-Finger Gripper</a>. It took me more time than I'd like to admit to figure out how to attach this thing 😒. BUT, once I got it attached, controlling the gripper was as simple as a clicking a button on the teaching pendant. Controlling the gripper through the terminal is slighthly more involved. I downloaded a <a href = "https://github.com/SintefRaufossManufacturing/python-urx/blob/master/urx/robotiq_two_finger_gripper.py"> library</a> that handles alot of the manipulation.</p>
+<p> The library is readily integrated, however, I needed to make sure that the IP address and socket port were correct for the packages to send correctly. Integrating movement and gripper actuation was surprisingly challenging because in my setup both movement and gripper actuation reference different libraries, each of which has built in delays. It required some tweaking to make sure the delays and sleep commands to the TCP did not interfere with other commands getting sent in the routine.<p>
+
+<video style = "width: 70%; height: auto; margin-bottom: 30px" controls muted loop><source src="img_vid/gripper+Motion.mp4"></video>
+
+<p>The next step was to program a routine to stack cubes into larger cube arrangements. Similar to the task of integrating movement and gripper actuation, however we want the script to be parametric (using configurable routines). The idea is to be able to specify the dimensions of the geometry for which we are automatically assembling.<p>
+
+<video style = "width: 40%" controls muted loop><source src="img_vid/pick_place.mp4"></video>
+
+
+<p class = "subtitle">End Effector Design</p>
+<p>With the cube-stacking routine, we have successfully shown that we can use script programming to actuate a Robotiq Gripper, execute motion, and implement configurable routines. Now we must leverage the same strategy of cube-stacking to “stack” cells of the ultra-performance material. </p>
+
+<p>The ultra-perfomance material we use is a seperate project that was developed in the CBA. There is more about this material on my advisor's, <a href = "https://copplestone.pages.cba.mit.edu/home/">Grace Copplestone</a>'s <a href = "https://copplestone.pages.cba.mit.edu/thesis_kelvin_phenolic/">page</a>.</p>
+
+<div class="gallery" style = "margin: 8.75%; float: left; width:30%">
+    <a href="img_vid/phenolic_v1_parts_rhino.jpg" class="image fit thumb"><img src="img_vid/phenolic_v1_parts_rhino.jpg"></a>
+  <div class="desc">CAD for cell of material</div>
+</div>
+<div class="gallery" style = "margin: 8.75%; float: left; width:35%">
+    <a href="img_vid/actuated_volume.jpg" class="image fit thumb"><img src="img_vid/actuated_volume.jpg"></a>
+  <div class="desc">Volume of material</div>
+</div>
+<div class = "full_line_div_test"></div>
+
+
+<p>Building a custom end effector to interface with the cells provides several advantages that are not available with the Robotiq Gripper. Principal among these is passive orientation control. Unlike the styrofoam cubes used in the cube-stacking routine, the cells of our material interface with one another with specific interlocking feature. These features provide the structural integrity that allow our material to be an ultra-performance material—having significantly higher strength to weight ratio than naturally occurring materials.</p>
+  
+
+<div class="gallery" style = "margin: 5%; float: left; width: 35%">
+    <a href="img_vid/design_space.jpg" class="image fit thumb"><img src="img_vid/design_space.jpg"></a>
+    <!-- <img src="img_vid/design_space.jpg" > -->
+  <div class="desc">Evaluating Design Space for Custom End Effector</div>
+</div>
+
+<div class="gallery" style = "margin: 5%; float: left; width: 35%">
+    <a href="img_vid/piece_sketch.jpg" class="image fit thumb"><img src="img_vid/piece_sketch.jpg"></a>
+    <!-- <img src="img_vid/piece_sketch.jpg" > -->
+  <div class="desc">Assessing potential contact surafaces with cell</div>
+</div>
+
+<div class="gallery" style = "margin: 3%; float: left; width: 35%">
+    <a href="img_vid/flexure_design.jpg" class="image fit thumb"><img src="img_vid/flexure_design.jpg"></a>
+    <!-- <img src= "img_vid/flexure_design.jpg" > -->
+  <div class="desc">Lead screw + flexure mechanism</div>
+</div>
+
+<div class="gallery" style = "margin: 3%; float: left; width: 25%">
+    <a href="img_vid/rack_pinion_pincher.jpg" class="image fit thumb"><img src="img_vid/rack_pinion_pincher.jpg"></a>
+    <!-- <img src="img_vid/rack_pinion_pincher.jpg" > -->
+  <div class="desc">rack + pinion cell grab mechanism</div>
+</div>
+
+<div class="gallery" style = "margin: 3%; float: right; width:15%">
+    <a href="img_vid/lead_screw_linkage.jpg" class="image fit thumb"><img src="img_vid/lead_screw_linkage.jpg"></a>
+    <!-- <img src="img_vid/lead_screw_linkage.jpg"> -->
+  <div class="desc">Lead screw + linkage mechanism</div>
+</div>
+
+<div class = "full_line_div_test"></div>
+<p>Brainstorming concepts for the end effector produced a decent number of varied designs. Next, I moved onto CADing a few of the concepts. </p>
+
+<div class="gallery" style = "margin: 6%; float: left; width:40%">
+    <a href="img_vid/piston_pinch_gif.gif" class="image fit thumb"><img src="img_vid/piston_pinch_gif.gif"></a>
+    <!-- <img src="img_vid/piston_pinch_gif.gif" > -->
+  <div class="desc">Interior cell pinching mechanism</div>
+</div>
+<div class="gallery" style = "margin: 6.5%; float: left; width:35%">
+    <a href="img_vid/flexure_cad.jpg" class="image fit thumb"><img src="img_vid/flexure_cad.jpg"></a>
+    <!-- <img src="img_vid/flexure_cad.jpg"> -->
+  <div class="desc">Linkage + flexure CAD</div>
+</div>
+<div class = "full_line_div_test"></div>
+
+
+<p> For the final design of the end effector we chose the flexure design primarily for the simplicity of the design. Utilizing the compliance of the 3d-printed materials in this design eliminates the need more complex interfaces such as linkages and bearings. The design of the flexure is dimensioned to allow for sufficient travel to grab and then retain the cell. The section of the flexure end effector which directly interacts includes a bevelled edge to facilitate pickup from a flat surgace. Additionally, the design of the groove allows the end effector to passively correct the orientation of the cell(so that we can locate the cell's interlocking geometry).</p>
+
+<div class="gallery" style = "margin: 5%; float: left; width:25%">
+    <img src="img_vid/3dprinted_end_effector.jpg">
+  <div class="desc">3D-printed flexure design</div>
+</div>
+<div class="gallery" style = "margin: 5%; float: left; width:25%">
+    <img src="img_vid/effector_arduino.jpg">
+  <div class="desc">Flexure design + arduino</div>
+</div>
+<div class="gallery" style = "margin: 5%; float: left; width:20%">
+    <img src="img_vid/custom_end_effector.jpg">
+  <div class="desc">Mounted custom end effector</div>
+</div>
+
+<div class = "full_line_div_test"></div>
+
+<p>Actuation of the flexure if handled by an arduino which is also mounted to the UR10 robot arm. The Arduino is running a simple program which listens to the status of 2 pins and send the corresoponding PWM signal to a stepper controller(which then actuates the stepper). Using 2 digital pins allows for 4 distinct states necessary for the manuever to grab or release the cell.</p>
+
+<video style = "width: 90%; height: auto; margin-bottom: 30px" controls muted loop > <source src="img_vid/demo_end_effector.mp4"> </video>
+
+<video style = "width: 40%; height: auto; margin-bottom: 30px" controls muted loop > <source src="img_vid/end_effector_cell_grab.mp4"> </video>
+
+<p>We successfully integrated operation of the custom end effector and arm movement all via the terminal!! While this is not a complete demonstration of an automated assembly this shows the integration of many of the essential components needed for an automated assembly for our ultra-performance material. All in all this was a fun project and it was <u>definitely</u> a learning experience. </p>
+
+<video style = "width: 100%; height: auto" controls muted loop > <source src="img_vid/final_routine1.mp4"> </video>
+
+<p class = "subtitle" style = "margin-top: 80px">Future Work</p>
+<p>Next steps for the project would to be fine tune the position control of the robot arm via the terminal, while I was able to control movement of the arm I did not achieve the precision necesarry for assembling cells with tightly toleranced interlocking features. The end-effector design works, but the electronics needed to actuate the flexure can definetely be less bulky by building a custom circuit board for the core components. Lastly, the specific routing for assembly is intially very similar to the cube-stacking routine, however, we quickly encounter scenarios in assembly which recquire the cells themselves to flex. This could mean that more work needs to be done in finding a functional routine or it could mean a potential redesign for the cells themselves.</p>
+
+
+<footer id="footer">
+        <div class="inner">
+          <ul class="icons">
+             
+            <li><a href="index.html#" class="icon fa-home"><span class="label">Email</span></a></li>
+            <li><a href="index.html#contact_info" class="icon fa-envelope-o"><span class="label">Email</span></a></li>
+            <li><a href="https://www.instagram.com/seek2b_grounded/" class="icon fa-instagram"><span class="label"></span></a></li>
+          </ul>
+          
+        </div>
+      </footer>
+
+      <script src="assets/js/jquery.min.js"></script>
+      <script src="assets/js/jquery.poptrox.min.js"></script>
+      <script src="assets/js/browser.min.js"></script>
+      <script src="assets/js/breakpoints.min.js"></script>
+      <script src="assets/js/util.js"></script>
+      <script src="assets/js/main.js"></script>
+</div>
+</body>
