@@ -1,0 +1,128 @@
+
+<!DOCTYPE HTML>
+<!--
+	Strata by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+
+<head>
+    <title>Harith's Projects - Automated Assembly</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+  </head>
+
+
+<body id="main" class="is-preload">
+
+
+<header id="header">
+        <div class="inner">
+         <!-- This is where the header text comes from, it's inserted with CSS. see main.css line~2668 -->
+          <a href="index.html#" class="image avatar"><img src="img_vid2/profile_pic.jpg"></a>
+          <br><span class = "headertext_hi">  </span>
+          <br><span class = "headertext_hometown">  </span>
+          <br><span class = "headertext_pitch">  </span>
+          <br><span class = "headertext_closing">  </span>
+          <!-- header text above -->
+        </div>
+      </header>
+
+<div> 
+
+
+<h1>Soft Robotic Grippers, Modeled Faster</h1>
+<p style="margin-top:1cm;"></p>
+<p>This project focus on a soft-robotic maniuplator design based on non-linear multi-stable geometry. The multi-stable nature of the design allows the manipulator to remain engage even when external stimulus(ex. pressure, electrical signal, etc) is removed. This is a unique capability among soft-robotic manipulators.</p>
+<img src="img_vid/softrobotic_multistable.png" style="display: block; margin-right: auto; margin-left: auto; height: 60%; width: 90%">
+<p></p>
+<p>Soft robotic manipulators are often modeled using Finite Element Analysis (FEA) to predict the kinematic configuration of the manipulator under various external stimuli. However, FEA is computationally expensive and slow, making it difficult to use in real-time applications. To address this issue, we developed a novel energy-based analytical model that can predict the kinematic configuration of the manipulator with high accuracy and at a fraction of the computational cost of FEA.</p>
+<div class="gallery" style = "display: block; margin-right: auto; margin-left: auto; width: 80%">
+  <a href="img_vid/softrobotic_optimization_thumbnail.png" class="image fit thumb"><img src="img_vid/softrobotic_optimization_thumbnail.png"></a>
+</div>
+<img src="img_vid/softrobotic_gripperclosing.gif" style="display: block; margin-right: auto; margin-left: auto; height: 60%; width: 50%">
+
+
+<p class = "subtitle">The Problem: The FEA Bottleneck</p>
+<p>Simulating soft robotics presents challenges that standard computational methods struggle to process efficiently. The non-linear behavior of these grippers further complicates traditional analysis.</p>
+<p>
+<ul>
+  <li>Complex Mechanics: The infinite dimensionality, material non-linearity, and large deformations of soft structures complicate standard modeling and closed-loop control. </li>
+  <li>The FEA Limitation: While highly accurate, conventional Finite Element (FE) packages require prohibitively long simulation run times to model the complexities of interacting bistable units.</li>
+</ul></p>
+<figure>
+<img src="img_vid/softrobotic_meshing.png" style="display: block; margin-right: auto; margin-left: auto; height: 60%; width: 50%">
+  <figcaption style="display: block; margin-right: auto; margin-left: auto; width: 40% ">Meshing for soft-robotic finger</figcaption>`
+</figure>
+
+
+<p class = "subtitle">Hardware Design: 3D Printed Soft Manipulators</p>
+<p>The design is entirely 3D printed, so fabrication is streamlined and adjustments for optimization can all be made in CAD. The novelty of employing mult-stable structures in a soft-robotic manipulator allows us to capture the many benefits of soft-robotic end-effectors(ex. compliance, adaptability, etc) while also simplifying the problem of control inherent to soft-robotics. Structurally programmed multistability opens to the possibility of open-loop control.</p>
+<p>
+<ul>
+  <li>Architecture: The DPG features sequential bistable domed-shaped shell elements encapsulated in a square chamber.</li>
+  <li>Fabrication & Actuation: The grippers are manufactured using Fused Deposition Modeling (FDM) with Thermoplastic Polyurethane (TPU) 95A. They are pneumatically actuated by applying positive and negative pressure to invert the domes and induce global curvature.</li>
+</ul></p>
+<figure>
+<img src="img_vid/softrobotic_3Dprinteddesign.png" style="display: block; margin-right: auto; margin-left: auto; height: 60%; width: 80%">
+  <figcaption style="display: block; margin-right: auto; margin-left: auto; width: 50% ">Internal Structure of the 3D Printed Manipulator</figcaption>`
+</figure>
+
+
+<p class = "subtitle">Software: The High-Speed Computational Model</p>
+<p>To bypass the FEA bottleneck, the continuous structure is abstracted into a computationally efficient reduced-order model.</p>
+<p>
+<ul>
+  <li>Lumped Parameter Lattice: The DPG is represented as a 2D lattice comprising linear, torsional, and bistable springs to map local extensions and rotations to defined energy contributions.</li>
+  <li>Non-Linear Energy Formulation: The bistable springs capture the dome's snap-through instability using the energy equation: <!-- Equation 1: ENL -->
+<math display="block">
+  <msub><mi>E</mi><mi>NL</mi></msub><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><msub><mi>k</mi><mi>b</mi></msub><msup><mi>x</mi><mn>2</mn></msup><mrow><mo>[</mo><mn>1</mn><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><mi>α</mi><mo>)</mo><msup><mrow><mo>(</mo><mfrac><mi>x</mi><mi>d</mi></mfrac><mo>−</mo><mn>1</mn><mo>)</mo></mrow><mn>2</mn></msup><mo>]</mo></mrow>
+</math></li>
+  <li>Energy Minimization: The system's total energy
+<math display="block">
+  <mo>(</mo><msub><mi>E</mi><mi>tot</mi></msub><mo>=</mo><munderover><mo>&#x2211;</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><msub><mi>E</mi><mi>L</mi></msub><mo>+</mo><msub><mi>E</mi><mi>NL</mi></msub><mo>+</mo><msub><mi>E</mi><mi>T</mi></msub><mo>)</mo>
+</math> 
+is minimized using the Newton-Raphson algorithm to find physically feasible, locally stable configurations.</li>
+</ul></p>
+<img src="img_vid/softrobotic_springmodel.png" style="display: block; margin-right: auto; margin-left: auto; height: 60%; width: 60%"><p></p>
+<img src="img_vid/softrobotic_modelfitting.png" style="display: block; margin-right: auto; margin-left: auto; height: 60%; width: 80%">
+
+
+<p class = "subtitle">Validation and Benchmarking</p>
+<p>The spring lattice model was strictly validated against commercial FE software (Abaqus) and experimental physical prototypes.</p>
+<img src="img_vid/softrobotic_benchmarking.png" style="display: block; margin-right: auto; margin-left: auto; width: 85%">
+
+
+<p class = "subtitle">Applications & Future Work</p>
+<p>This computational efficiency enables rapid, tractable searches of the configuration space for targeted design.</p>
+<p>
+<ul>
+  <li>Force and Position Control: By modulating input pressure to selectively invert specific dome geometries, the system achieves reliable open-loop modulation of grasping force and tip positioning without complex sensory feedback. </li>
+  <li>Future Trajectory: Next steps involve developing forward design tools that generate DPG topologies directly from desired properties and produce tailored grasping routines. </li>
+</ul></p>
+
+<!-- <video style = "width: 80%; height: auto" controls muted loop > <source src="img_vid/softrobotic_gripperfullvid.mov"> </video> -->
+
+
+<footer id="footer">
+        <div class="inner">
+          <ul class="icons">
+             
+            <li><a href="index.html#" class="icon fa-home"><span class="label">Email</span></a></li>
+            <li><a href="index.html#contact_info" class="icon fa-envelope-o"><span class="label">Email</span></a></li>
+            <li><a href="https://www.instagram.com/seek2b_grounded/" class="icon fa-instagram"><span class="label"></span></a></li>
+          </ul>
+          
+        </div>
+      </footer>
+
+      <script src="assets/js/jquery.min.js"></script>
+      <script src="assets/js/jquery.poptrox.min.js"></script>
+      <script src="assets/js/browser.min.js"></script>
+      <script src="assets/js/breakpoints.min.js"></script>
+      <script src="assets/js/util.js"></script>
+      <script src="assets/js/main.js"></script>
+</div>
+</body>
